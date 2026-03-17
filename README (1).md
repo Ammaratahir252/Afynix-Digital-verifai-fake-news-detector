@@ -1,6 +1,6 @@
 # VerifAI — Fake News Detector
 
-A real-time fake news detection web app built for **NLP Project**.
+A real-time fake news detection web app built as **NLP Project**.
 
 ![Python](https://img.shields.io/badge/Python-3.8+-blue)
 ![Flask](https://img.shields.io/badge/Flask-2.x-lightgrey)
