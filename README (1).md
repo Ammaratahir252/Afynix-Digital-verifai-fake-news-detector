@@ -1,6 +1,6 @@
 # VerifAI — Fake News Detector
 
-A real-time fake news detection web app built for **Week 5 — NLP Project**.
+A real-time fake news detection web app built for **NLP Project**.
 
 ![Python](https://img.shields.io/badge/Python-3.8+-blue)
 ![Flask](https://img.shields.io/badge/Flask-2.x-lightgrey)
@@ -27,9 +27,7 @@ verifai_app/
 ├── app.py                  # Flask backend + ML pipeline
 ├── requirements.txt        # Python dependencies
 └── templates/
-    ├── base.html           # Shared layout + sidebar nav
     ├── index.html          # Analysis page  ( / )
-    └── history.html        # History page   ( /history )
 ```
 
 ---
@@ -105,27 +103,6 @@ scikit-learn
 requests
 numpy
 ```
-
----
-
-## Week 5 Requirements Checklist
-
-- [x] Text cleaning pipeline
-- [x] TF-IDF vectorization
-- [x] Naive Bayes classifier
-- [x] Logistic Regression classifier
-- [x] Accuracy + Precision + Recall + F1
-- [x] Comparison of 2 models
-
----
-
-## Screenshots
-
-| Analysis Page | History Page |
-|--------------|--------------|
-| Paste article → instant verdict | Full table of all analyzed articles |
-
----
 
 ## License
 
