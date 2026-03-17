@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VerifAI — Fake News Detector</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #fafaf8;
+      --surface:     #ffffff;
+      --surface2:    #f4f3ef;
+      --surface3:    #eceae4;
+      --ink:         #1a1916;
+      --ink2:        #6b6860;
+      --ink3:        #b0aea8;
+      --border:      #e8e6e0;
+      --border2:     #d8d5ce;
+      --red:         #b83232;
+      --red-bg:      #fdf2f2;
+      --red-border:  #f0c4c4;
+      --green:       #1e6e42;
+      --green-bg:    #f0f7f3;
+      --green-border:#b8ddc8;
+      --amber:       #8a5c0a;
+      --amber-bg:    #fdf6ec;
+      --r-sm:        4px;
+      --r:           8px;
+      --r-lg:        12px;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      font-family: 'Geist', sans-serif;
+      color: var(--ink);
+      font-size: 13.5px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── TOPBAR ──────────────────────────────────── */
+    .topbar {
+      background: var(--ink);
+      height: 52px;
+      padding: 0 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 200;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .brand-mark {
+      width: 28px;
+      height: 28px;
+      background: #ffffff14;
+      border: 1px solid #ffffff22;
+      border-radius: var(--r-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .brand-mark svg { width: 14px; height: 14px; }
+    .brand-name {
+      font-family: 'Instrument Serif', serif;
+      font-size: 18px;
+      color: #fff;
+      letter-spacing: .2px;
+    }
+    .brand-sep {
+      width: 1px;
+      height: 16px;
+      background: #ffffff22;
+      margin: 0 6px;
+    }
+    .brand-sub {
+      font-size: 11px;
+      color: #ffffff55;
+      letter-spacing: .5px;
+      font-weight: 300;
+    }
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+    .engine-status {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #555;
+      transition: background .5s;
+      flex-shrink: 0;
+    }
+    .status-dot.ready { background: #4ade80; animation: pulse-dot 2.5s infinite; }
+    @keyframes pulse-dot {
+      0%,100% { opacity: 1; }
+      50%      { opacity: .4; }
+    }
+    .status-label {
+      font-size: 11px;
+      color: #555;
+      font-family: 'Geist Mono', monospace;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      transition: color .5s;
+    }
+    .status-label.ready { color: #4ade80; }
+    .top-tag {
+      font-size: 11px;
+      color: #444;
+      font-family: 'Geist Mono', monospace;
+      letter-spacing: .6px;
+    }
+
+    /* ─── STATUS RIBBON ───────────────────────────── */
+    #statusRibbon {
+      background: #111;
+      border-bottom: 1px solid #1e1e1e;
+      padding: 7px 28px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .ribbon-msg {
+      font-size: 11.5px;
+      font-family: 'Geist Mono', monospace;
+      color: #555;
+      transition: color .4s;
+    }
+    .ribbon-msg.ok      { color: #4ade80; }
+    .ribbon-msg.loading { color: #f59e0b; }
+    .ribbon-divider {
+      flex: 1;
+    }
+    .ribbon-metrics {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .rm-item {
+      font-size: 11px;
+      font-family: 'Geist Mono', monospace;
+      color: #3a3a3a;
+    }
+    .rm-item b { color: #666; font-weight: 500; }
+
+    /* ─── PAGE SHELL ──────────────────────────────── */
+    .page {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 28px;
+    }
+
+    /* ─── HERO ────────────────────────────────────── */
+    .hero {
+      padding: 44px 0 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 28px;
+    }
+    .hero-kicker {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+      color: var(--ink3);
+      margin-bottom: 14px;
+      font-family: 'Geist Mono', monospace;
+    }
+    .hero-title {
+      font-family: 'Instrument Serif', serif;
+      font-size: 44px;
+      font-weight: 400;
+      line-height: 1.05;
+      color: var(--ink);
+      letter-spacing: -.5px;
+      max-width: 680px;
+    }
+    .hero-rule {
+      width: 40px;
+      height: 2px;
+      background: var(--ink);
+      margin: 20px 0;
+    }
+    .hero-desc {
+      font-size: 14px;
+      color: var(--ink2);
+      max-width: 520px;
+      line-height: 1.75;
+      font-weight: 300;
+    }
+    .hero-tags {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 20px 0;
+    }
+    .hero-tag {
+      font-size: 11px;
+      font-family: 'Geist Mono', monospace;
+      color: var(--ink2);
+      border: 1px solid var(--border2);
+      border-radius: 3px;
+      padding: 3px 10px;
+      background: var(--surface);
+      letter-spacing: .3px;
+    }
+
+    /* ─── LAYOUT ──────────────────────────────────── */
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 20px;
+      align-items: start;
+      padding-bottom: 60px;
+    }
+    @media (max-width: 860px) {
+      .layout { grid-template-columns: 1fr; }
+      .hero-title { font-size: 32px; }
+    }
+
+    /* ─── SHARED CARD ─────────────────────────────── */
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+    }
+    .panel-header {
+      padding: 13px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .panel-title {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--ink2);
+    }
+    .panel-meta {
+      font-size: 11.5px;
+      color: var(--ink3);
+      font-family: 'Geist Mono', monospace;
+    }
+
+    /* ─── INPUT ───────────────────────────────────── */
+    #newsInput {
+      width: 100%;
+      min-height: 190px;
+      padding: 18px;
+      border: none;
+      outline: none;
+      resize: none;
+      font-size: 14.5px;
+      font-family: 'Geist', sans-serif;
+      font-weight: 300;
+      color: var(--ink);
+      background: var(--surface);
+      line-height: 1.75;
+    }
+    #newsInput::placeholder { color: var(--ink3); }
+    #newsInput:disabled     { opacity: .45; cursor: not-allowed; }
+    .input-bar {
+      padding: 11px 18px;
+      border-top: 1px solid var(--border);
+      background: var(--surface2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .samples { display: flex; gap: 6px; flex-wrap: wrap; }
+    .sample-btn {
+      font-size: 11.5px;
+      font-family: 'Geist', sans-serif;
+      font-weight: 400;
+      color: var(--ink2);
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: var(--r-sm);
+      padding: 4px 12px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .sample-btn:hover { background: var(--ink); color: #fff; border-color: var(--ink); }
+    .run-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 22px;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: 'Geist', sans-serif;
+      background: var(--ink);
+      color: #fff;
+      border: none;
+      border-radius: var(--r-sm);
+      cursor: pointer;
+      letter-spacing: .2px;
+      transition: opacity .15s;
+      white-space: nowrap;
+    }
+    .run-btn:hover:not(:disabled) { opacity: .82; }
+    .run-btn:disabled { opacity: .3; cursor: not-allowed; }
+    .run-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #555;
+      transition: background .4s;
+    }
+    .run-dot.on   { background: #4ade80; }
+    .run-dot.spin { animation: pulse-dot .8s infinite; }
+
+    /* ─── PROCESSING ──────────────────────────────── */
+    #processingBox {
+      display: none;
+      padding: 30px 20px;
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      margin-top: 14px;
+      background: var(--surface);
+      text-align: center;
+    }
+    .spin-ring {
+      width: 34px;
+      height: 34px;
+      border: 1.5px solid var(--border);
+      border-top-color: var(--ink);
+      border-radius: 50%;
+      animation: spin .65s linear infinite;
+      margin: 0 auto 14px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .proc-title { font-size: 13px; font-weight: 500; color: var(--ink2); margin-bottom: 18px; }
+    .proc-list  { display: flex; flex-direction: column; gap: 8px; text-align: left; }
+    .proc-step  {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      font-family: 'Geist Mono', monospace;
+      color: var(--ink3);
+      transition: color .2s;
+    }
+    .proc-step.active { color: var(--ink); }
+    .proc-step.done   { color: var(--green); }
+    .ps-icon { width: 14px; text-align: center; font-size: 11px; }
+
+    /* ─── RESULT ──────────────────────────────────── */
+    #resultCard {
+      display: none;
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+      margin-top: 14px;
+      animation: rise .35s ease;
+    }
+    @keyframes rise { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+    .res-accent { height: 3px; }
+    .ra-fake   { background: var(--red); }
+    .ra-real   { background: var(--green); }
+    .ra-unsure { background: var(--border2); }
+
+    .res-hero {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      padding: 22px 22px 18px;
+    }
+    .rh-fake   { background: var(--red-bg);   border-bottom: 1px solid var(--red-border); }
+    .rh-real   { background: var(--green-bg); border-bottom: 1px solid var(--green-border); }
+    .rh-unsure { background: var(--surface2); border-bottom: 1px solid var(--border); }
+
+    .verdict-ring {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .vr-fake   { background: var(--red);   }
+    .vr-real   { background: var(--green); }
+    .vr-unsure { background: var(--surface3); border: 1px solid var(--border2); }
+    .vr-icon { font-size: 20px; color: #fff; line-height: 1; }
+    .vr-unsure .vr-icon { color: var(--ink2); }
+    .vr-word {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: #ffffffbb;
+      margin-top: 3px;
+      font-family: 'Geist Mono', monospace;
+    }
+    .vr-unsure .vr-word { color: var(--ink3); }
+
+    .verdict-copy {}
+    .vc-headline {
+      font-family: 'Instrument Serif', serif;
+      font-size: 22px;
+      font-weight: 400;
+      line-height: 1.15;
+    }
+    .vc-fake   { color: var(--red); }
+    .vc-real   { color: var(--green); }
+    .vc-unsure { color: var(--ink2); }
+    .vc-desc {
+      font-size: 13px;
+      color: var(--ink2);
+      margin-top: 5px;
+      line-height: 1.6;
+      font-weight: 300;
+      max-width: 420px;
+    }
+
+    .res-body { padding: 18px 22px 22px; background: var(--surface); }
+
+    /* confidence */
+    .conf-section { margin-bottom: 20px; }
+    .section-label {
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--ink3);
+      margin-bottom: 8px;
+    }
+    .conf-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .conf-num {
+      font-size: 13.5px;
+      font-weight: 600;
+      font-family: 'Geist Mono', monospace;
+      color: var(--ink);
+    }
+    .conf-track {
+      height: 6px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .conf-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width .9s cubic-bezier(.16,1,.3,1);
+    }
+    .cf-fake   { background: var(--red); }
+    .cf-real   { background: var(--green); }
+    .cf-unsure { background: var(--border2); }
+
+    /* model grid */
+    .model-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+    .model-box {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 14px;
+    }
+    .mb-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .mb-label {
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      color: var(--ink3);
+    }
+    .mb-pill {
+      font-size: 10px;
+      font-weight: 500;
+      font-family: 'Geist Mono', monospace;
+      padding: 2px 7px;
+      border-radius: 3px;
+    }
+    .mp-fake   { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-border); }
+    .mp-real   { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+    .mp-unsure { background: var(--surface3); color: var(--ink2);  border: 1px solid var(--border2); }
+    .mb-pct {
+      font-size: 28px;
+      font-weight: 600;
+      font-family: 'Geist Mono', monospace;
+      line-height: 1;
+    }
+    .mp-pct-fake   { color: var(--red); }
+    .mp-pct-real   { color: var(--green); }
+    .mp-pct-unsure { color: var(--ink2); }
+    .mb-bar { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; margin-top: 9px; }
+    .mb-fill { height: 100%; border-radius: 2px; transition: width .9s cubic-bezier(.16,1,.3,1); }
+
+    /* signals */
+    .sig-list { display: flex; flex-direction: column; gap: 5px; }
+    .sig-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: var(--r-sm);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+    }
+    .sig-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .sd-high   { background: var(--red); }
+    .sd-medium { background: #d97706; }
+    .sd-low    { background: var(--green); }
+    .sig-text  { font-size: 12px; color: var(--ink2); flex: 1; font-weight: 300; }
+    .sig-wt    { font-size: 12px; font-family: 'Geist Mono', monospace; color: var(--ink3); }
+
+    /* error toast */
+    #errorToast {
+      display: none;
+      border-radius: var(--r);
+      padding: 10px 16px;
+      margin-top: 12px;
+      font-size: 13px;
+      background: var(--red-bg);
+      border: 1px solid var(--red-border);
+      color: var(--red);
+    }
+
+    /* ─── SIDEBAR ─────────────────────────────────── */
+    .sidebar { display: flex; flex-direction: column; gap: 14px; }
+
+    /* stats */
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .stat-cell {
+      background: var(--surface2);
+      border-radius: var(--r);
+      padding: 14px 12px;
+      text-align: center;
+    }
+    .sc-num {
+      font-size: 28px;
+      font-weight: 600;
+      font-family: 'Instrument Serif', serif;
+      line-height: 1;
+    }
+    .sc-lbl {
+      font-size: 10px;
+      color: var(--ink3);
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      margin-top: 4px;
+    }
+
+    /* metrics table */
+    .mtable {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+    }
+    .mtable th {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      color: var(--ink3);
+      padding: 4px 0 8px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .mtable th:not(:first-child) { text-align: right; }
+    .mtable td {
+      padding: 7px 0;
+      border-bottom: 1px solid var(--border);
+      color: var(--ink2);
+      font-weight: 300;
+    }
+    .mtable td:not(:first-child) {
+      text-align: right;
+      font-family: 'Geist Mono', monospace;
+      font-weight: 400;
+      color: var(--ink);
+    }
+    .mtable tr:last-child td { border-bottom: none; }
+
+    /* history */
+    .hist-empty { font-size: 12.5px; color: var(--ink3); text-align: center; padding: 20px 0; font-weight: 300; }
+    .hist-list  { display: flex; flex-direction: column; gap: 7px; }
+    .hist-item  {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 9px 11px;
+      border-radius: var(--r-sm);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .hist-item:hover { background: var(--surface2); }
+    .hi-ind { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+    .hi-txt { font-size: 12px; color: var(--ink); line-height: 1.5; font-weight: 300; }
+    .hi-meta{ font-size: 10.5px; color: var(--ink3); margin-top: 2px; font-family: 'Geist Mono', monospace; }
+
+    /* how it works */
+    .how-list { display: flex; flex-direction: column; gap: 14px; }
+    .how-item { display: flex; gap: 12px; align-items: flex-start; }
+    .how-num  {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--ink);
+      color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10.5px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .how-t { font-size: 13px; font-weight: 500; color: var(--ink); }
+    .how-d { font-size: 12px; color: var(--ink2); margin-top: 2px; line-height: 1.55; font-weight: 300; }
+
+    /* ─── FOOTER ──────────────────────────────────── */
+    .footer {
+      background: var(--ink);
+      padding: 16px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .footer-l { font-size: 11.5px; color: #444; font-family: 'Geist Mono', monospace; }
+    .footer-r { font-size: 11px; color: #333; letter-spacing: .8px; text-transform: uppercase; }
+  </style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark">
+      <svg viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M7 1.5L12.5 4.5V9.5L7 12.5L1.5 9.5V4.5L7 1.5Z" stroke="#fff" stroke-width="1.2"/>
+        <circle cx="7" cy="7" r="1.8" fill="#fff"/>
+      </svg>
+    </div>
+    <span class="brand-name">VerifAI</span>
+    <div class="brand-sep"></div>
+    <span class="brand-sub">Fake News Detector</span>
+  </div>
+  <div class="topbar-right">
+    <div class="engine-status">
+      <div class="status-dot" id="statusDot"></div>
+      <span class="status-label" id="statusLabel">Initializing...</span>
+    </div>
+    <span class="top-tag">Flask · scikit-learn</span>
+  </div>
+</header>
+
+<!-- STATUS RIBBON -->
+<div id="statusRibbon">
+  <span class="ribbon-msg loading" id="ribbonMsg">⟳ Training models on startup, please wait...</span>
+  <div class="ribbon-divider"></div>
+  <div class="ribbon-metrics" id="ribbonMetrics" style="display:none">
+    <span class="rm-item">NB <b id="rmNb">—</b></span>
+    <span class="rm-item">LR <b id="rmLr">—</b></span>
+    <span class="rm-item">Vocab <b id="rmVocab">—</b></span>
+    <span class="rm-item">Train <b id="rmTrain">—</b></span>
+  </div>
+</div>
+
+<!-- PAGE -->
+<div class="page">
+
+  <!-- HERO -->
+  <section class="hero">
+    <h1 class="hero-title">Real-time fake news detection</h1>
+    <div class="hero-rule"></div>
+    <p class="hero-desc">
+      Paste any article or headline.
+    </p>
+    <div class="hero-tags">
+      <span class="hero-tag">TF-IDF</span>
+      <span class="hero-tag">Naive Bayes</span>
+      <span class="hero-tag">Logistic Regression</span>
+      <span class="hero-tag">Flask API</span>
+      <span class="hero-tag">scikit-learn</span>
+      <span class="hero-tag">Real Python Backend</span>
+    </div>
+  </section>
+
+  <!-- LAYOUT -->
+  <div class="layout">
+
+    <!-- LEFT -->
+    <div>
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Article input</span>
+          <span class="panel-meta" id="wordCount">0 words</span>
+        </div>
+        <textarea id="newsInput" disabled
+          placeholder="Waiting for models to finish training... (10–20 seconds on first run)"
+          oninput="onType()"></textarea>
+        <div class="input-bar">
+          <div class="samples">
+            <button class="sample-btn" onclick="loadSample(0)">Fake sample</button>
+            <button class="sample-btn" onclick="loadSample(1)">Real sample</button>
+            <button class="sample-btn" onclick="loadSample(2)">Sensational</button>
+            <button class="sample-btn" onclick="clearAll()">Clear</button>
+          </div>
+          <button class="run-btn" id="runBtn" onclick="analyze()" disabled>
+            <span class="run-dot" id="runDot"></span>
+            Analyze
+          </button>
+        </div>
+      </div>
+
+      <div id="errorToast"></div>
+
+      <!-- Processing -->
+      <div id="processingBox">
+        <div class="spin-ring"></div>
+        <div class="proc-title">Processing...</div>
+        <div class="proc-list">
+          <div class="proc-step" id="ps1"><span class="ps-icon">○</span> Cleaning &amp; tokenizing text</div>
+          <div class="proc-step" id="ps2"><span class="ps-icon">○</span> Applying TF-IDF vectorizer</div>
+          <div class="proc-step" id="ps3"><span class="ps-icon">○</span> Naive Bayes prediction</div>
+          <div class="proc-step" id="ps4"><span class="ps-icon">○</span> Logistic Regression prediction</div>
+          <div class="proc-step" id="ps5"><span class="ps-icon">○</span> Computing confidence &amp; signals</div>
+        </div>
+      </div>
+
+      <!-- Result -->
+      <div id="resultCard">
+        <div class="res-accent" id="resAccent"></div>
+        <div class="res-hero" id="resHero">
+          <div class="verdict-ring" id="verdictRing">
+            <div class="vr-icon" id="vrIcon"></div>
+            <div class="vr-word" id="vrWord"></div>
+          </div>
+          <div class="verdict-copy">
+            <div class="vc-headline" id="vcHeadline"></div>
+            <div class="vc-desc"     id="vcDesc"></div>
+          </div>
+        </div>
+        <div class="res-body">
+          <div class="conf-section">
+            <div class="section-label">Overall confidence</div>
+            <div class="conf-row">
+              <span style="font-size:12px;color:var(--ink2)">Combined model score</span>
+              <span class="conf-num" id="confNum">—</span>
+            </div>
+            <div class="conf-track">
+              <div class="conf-fill" id="confFill" style="width:0%"></div>
+            </div>
+          </div>
+
+          <div class="section-label">Model breakdown</div>
+          <div class="model-row">
+            <div class="model-box">
+              <div class="mb-head">
+                <span class="mb-label">Naive Bayes</span>
+                <span class="mb-pill" id="nbPill">—</span>
+              </div>
+              <div class="mb-pct" id="nbPct">—</div>
+              <div class="mb-bar"><div class="mb-fill" id="nbFill" style="width:0%"></div></div>
+            </div>
+            <div class="model-box">
+              <div class="mb-head">
+                <span class="mb-label">Logistic Reg.</span>
+                <span class="mb-pill" id="lrPill">—</span>
+              </div>
+              <div class="mb-pct" id="lrPct">—</div>
+              <div class="mb-bar"><div class="mb-fill" id="lrFill" style="width:0%"></div></div>
+            </div>
+          </div>
+
+          <div class="section-label">Linguistic signals</div>
+          <div class="sig-list" id="sigList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+      <div class="panel">
+        <div class="panel-header"><span class="panel-title">Session</span></div>
+        <div style="padding:14px">
+          <div class="stats-grid">
+            <div class="stat-cell"><div class="sc-num" id="sSessions">0</div><div class="sc-lbl">Analyzed</div></div>
+            <div class="stat-cell"><div class="sc-num" id="sFake" style="color:var(--red)">0</div><div class="sc-lbl">Fake</div></div>
+            <div class="stat-cell"><div class="sc-num" id="sReal" style="color:var(--green)">0</div><div class="sc-lbl">Real</div></div>
+            <div class="stat-cell"><div class="sc-num" id="sAvg">—</div><div class="sc-lbl">Avg conf.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><span class="panel-title">Model performance</span></div>
+        <div style="padding:14px">
+          <table class="mtable">
+            <thead>
+              <tr><th>Metric</th><th>NB</th><th>LR</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Accuracy</td><td id="mNbAcc">—</td><td id="mLrAcc">—</td></tr>
+              <tr><td>Precision</td><td id="mNbPre">—</td><td id="mLrPre">—</td></tr>
+              <tr><td>Recall</td><td id="mNbRec">—</td><td id="mLrRec">—</td></tr>
+              <tr><td>F1 Score</td><td id="mNbF1">—</td><td id="mLrF1">—</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><span class="panel-title">History</span></div>
+        <div style="padding:12px">
+          <div class="hist-empty" id="histEmpty">No analyses yet</div>
+          <div class="hist-list"  id="histList"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><span class="panel-title">How it works</span></div>
+        <div style="padding:16px">
+          <div class="how-list">
+            <div class="how-item"><div class="how-num">1</div><div><div class="how-t">Text cleaning</div><div class="how-d">Lowercase, remove URLs, HTML, punctuation, digits, stopwords</div></div></div>
+            <div class="how-item"><div class="how-num">2</div><div><div class="how-t">TF-IDF vectorization</div><div class="how-d">Words scored by frequency vs. rarity, up to 15,000 features with bigrams</div></div></div>
+            <div class="how-item"><div class="how-num">3</div><div><div class="how-t">Dual classification</div><div class="how-d">Naive Bayes and Logistic Regression vote independently on the input</div></div></div>
+            <div class="how-item"><div class="how-num">4</div><div><div class="how-t">Signal analysis</div><div class="how-d">Capitalization, exclamations, sensationalism score, credibility markers</div></div></div>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <span class="footer-l">verifai · python flask · scikit-learn · real ml backend</span>
+</footer>
+
+<script>
+  const SAMPLES = [
+    'BREAKING: Government secretly putting mind control chemicals in tap water!! Doctors WONT tell you this miracle cure they have been suppressing for DECADES. Share before this gets deleted! The deep state cabal is hiding the truth from you. WAKE UP sheeple!!',
+    'Researchers at Johns Hopkins University published findings in the New England Journal of Medicine confirming the new vaccine shows 94 percent efficacy in phase three clinical trials. The peer-reviewed study analyzed data from over 44000 participants across six countries according to official health authority spokespersons.',
+    'You WONT BELIEVE what they found hidden in your food supply!! Big pharma executives EXPOSED in leaked documents. Anonymous insiders confirm the explosive scandal. Wake up!!'
+  ];
+
+  let session = { total:0, fake:0, real:0, confSum:0 };
+  let hist    = [];
+  let ready   = false;
+
+  async function pollStatus() {
+    try {
+      const r = await fetch('/api/status');
+      const d = await r.json();
+      if (d.ready) {
+        ready = true;
+        const m = d.metrics;
+
+        document.getElementById('statusDot').classList.add('ready');
+        document.getElementById('statusLabel').textContent = 'Models ready';
+        document.getElementById('statusLabel').classList.add('ready');
+
+        document.getElementById('ribbonMsg').textContent = '✓ Models trained and ready';
+        document.getElementById('ribbonMsg').className = 'ribbon-msg ok';
+        document.getElementById('rmNb').textContent    = m.nb.accuracy + '%';
+        document.getElementById('rmLr').textContent    = m.lr.accuracy + '%';
+        document.getElementById('rmVocab').textContent = m.vocab_size.toLocaleString();
+        document.getElementById('rmTrain').textContent = m.train_size.toLocaleString();
+        document.getElementById('ribbonMetrics').style.display = 'flex';
+
+        document.getElementById('mNbAcc').textContent = m.nb.accuracy  + '%';
+        document.getElementById('mLrAcc').textContent = m.lr.accuracy  + '%';
+        document.getElementById('mNbPre').textContent = m.nb.precision + '%';
+        document.getElementById('mLrPre').textContent = m.lr.precision + '%';
+        document.getElementById('mNbRec').textContent = m.nb.recall    + '%';
+        document.getElementById('mLrRec').textContent = m.lr.recall    + '%';
+        document.getElementById('mNbF1').textContent  = m.nb.f1        + '%';
+        document.getElementById('mLrF1').textContent  = m.lr.f1        + '%';
+
+        document.getElementById('newsInput').disabled = false;
+        document.getElementById('newsInput').placeholder = 'Paste a news headline or full article here...';
+        document.getElementById('runDot').classList.add('on');
+      } else {
+        setTimeout(pollStatus, 1500);
+      }
+    } catch(e) { setTimeout(pollStatus, 2000); }
+  }
+
+  function onType() {
+    const v  = document.getElementById('newsInput').value;
+    const wc = v.trim() === '' ? 0 : v.trim().split(/\s+/).length;
+    document.getElementById('wordCount').textContent = wc + ' word' + (wc !== 1 ? 's' : '');
+    document.getElementById('runBtn').disabled = !ready || v.trim().length < 10;
+  }
+
+  function loadSample(i) { document.getElementById('newsInput').value = SAMPLES[i]; onType(); }
+
+  function clearAll() {
+    document.getElementById('newsInput').value = '';
+    onType();
+    document.getElementById('resultCard').style.display    = 'none';
+    document.getElementById('processingBox').style.display = 'none';
+    document.getElementById('errorToast').style.display    = 'none';
+  }
+
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+  async function analyze() {
+    const text = document.getElementById('newsInput').value.trim();
+    if (!text || text.length < 10) return;
+
+    document.getElementById('resultCard').style.display    = 'none';
+    document.getElementById('errorToast').style.display    = 'none';
+    document.getElementById('processingBox').style.display = 'block';
+    document.getElementById('runBtn').disabled = true;
+    document.getElementById('runDot').classList.add('spin');
+
+    const steps = ['ps1','ps2','ps3','ps4','ps5'];
+    for (const id of steps) {
+      const el = document.getElementById(id);
+      el.classList.add('active');
+      el.querySelector('.ps-icon').textContent = '◎';
+      await sleep(160);
+    }
+
+    try {
+      const resp = await fetch('/api/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      });
+      if (!resp.ok) { const e = await resp.json(); throw new Error(e.error || 'Server error'); }
+      const d = await resp.json();
+
+      steps.forEach(id => {
+        const el = document.getElementById(id);
+        el.classList.remove('active');
+        el.classList.add('done');
+        el.querySelector('.ps-icon').textContent = '✓';
+      });
+      await sleep(80);
+      document.getElementById('processingBox').style.display = 'none';
+
+      const isFake   = d.verdict === 'fake';
+      const isUnsure = d.verdict === 'unsure';
+      const v        = d.verdict;
+
+      document.getElementById('resAccent').className   = 'res-accent ra-' + v;
+      document.getElementById('resHero').className     = 'res-hero rh-' + v;
+      document.getElementById('verdictRing').className = 'verdict-ring vr-' + v;
+      document.getElementById('vrIcon').textContent    = isFake ? '✕' : isUnsure ? '?' : '✓';
+      document.getElementById('vrWord').textContent    = v.toUpperCase();
+      document.getElementById('vcHeadline').className  = 'vc-headline vc-' + v;
+      document.getElementById('vcHeadline').textContent= isFake ? 'Likely fake news' : isUnsure ? 'Uncertain' : 'Likely credible';
+      document.getElementById('vcDesc').textContent    = isFake
+        ? 'Multiple red flags detected. Verify with trusted sources before sharing.'
+        : isUnsure
+        ? 'Mixed signals. Cross-check with multiple reputable outlets.'
+        : 'Credible writing patterns detected. Both models agree this resembles real news.';
+
+      document.getElementById('confNum').textContent   = d.confidence + '%';
+      const cf = document.getElementById('confFill');
+      cf.className   = 'conf-fill cf-' + v;
+      cf.style.width = d.confidence + '%';
+
+      const nbFake = d.nb.pred === 'FAKE';
+      document.getElementById('nbPill').textContent  = d.nb.pred;
+      document.getElementById('nbPill').className    = 'mb-pill ' + (nbFake ? 'mp-fake' : 'mp-real');
+      document.getElementById('nbPct').textContent   = d.nb.conf + '%';
+      document.getElementById('nbPct').className     = 'mb-pct ' + (nbFake ? 'mp-pct-fake' : 'mp-pct-real');
+      document.getElementById('nbFill').style.width  = d.nb.conf + '%';
+      document.getElementById('nbFill').style.background = nbFake ? 'var(--red)' : 'var(--green)';
+
+      const lrFake = d.lr.pred === 'FAKE';
+      document.getElementById('lrPill').textContent  = d.lr.pred;
+      document.getElementById('lrPill').className    = 'mb-pill ' + (lrFake ? 'mp-fake' : 'mp-real');
+      document.getElementById('lrPct').textContent   = d.lr.conf + '%';
+      document.getElementById('lrPct').className     = 'mb-pct ' + (lrFake ? 'mp-pct-fake' : 'mp-pct-real');
+      document.getElementById('lrFill').style.width  = d.lr.conf + '%';
+      document.getElementById('lrFill').style.background = lrFake ? 'var(--red)' : 'var(--green)';
+
+      document.getElementById('sigList').innerHTML = d.signals.map(s => `
+        <div class="sig-row">
+          <div class="sig-dot sd-${s.level}"></div>
+          <span class="sig-text">${s.text}</span>
+          <span class="sig-wt">${s.weight}</span>
+        </div>`).join('');
+
+      document.getElementById('resultCard').style.display = 'block';
+
+      session.total++;
+      if (isFake) session.fake++; else if (!isUnsure) session.real++;
+      session.confSum += d.confidence;
+      document.getElementById('sSessions').textContent = session.total;
+      document.getElementById('sFake').textContent     = session.fake;
+      document.getElementById('sReal').textContent     = session.real;
+      document.getElementById('sAvg').textContent      = Math.round(session.confSum / session.total) + '%';
+
+      const preview = text.length > 58 ? text.substring(0,58) + '…' : text;
+      const time    = new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+      hist.unshift({ preview, isFake, isUnsure, conf: d.confidence, time });
+      if (hist.length > 8) hist.pop();
+      document.getElementById('histEmpty').style.display = 'none';
+      document.getElementById('histList').innerHTML = hist.map(h => `
+        <div class="hist-item">
+          <div class="hi-ind" style="background:${h.isUnsure?'var(--border2)':h.isFake?'var(--red)':'var(--green)'}"></div>
+          <div>
+            <div class="hi-txt">${h.preview}</div>
+            <div class="hi-meta">${h.isFake?'FAKE':h.isUnsure?'UNSURE':'REAL'} · ${h.conf}% · ${h.time}</div>
+          </div>
+        </div>`).join('');
+
+    } catch(e) {
+      document.getElementById('processingBox').style.display = 'none';
+      const t = document.getElementById('errorToast');
+      t.textContent = 'Error: ' + e.message;
+      t.style.display = 'block';
+    }
+
+    steps.forEach(id => {
+      const el = document.getElementById(id);
+      el.classList.remove('done','active');
+      el.querySelector('.ps-icon').textContent = '○';
+    });
+    document.getElementById('runBtn').disabled = false;
+    document.getElementById('runDot').classList.remove('spin');
+  }
+
+  pollStatus();
+</script>
+</body>
+</html>

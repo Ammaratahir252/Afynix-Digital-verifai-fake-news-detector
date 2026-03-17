@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+
+# Virtual environments
+venv/
+env/
+.env/
+.venv/
+ENV/
+
+# Dataset files (too large for GitHub)
+Fake.csv
+True.csv
+*.csv
+
+# Flask
+instance/
+.webassets-cache
+flask_session/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Model files (if saved)
+*.pkl
+*.joblib
+*.h5
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
